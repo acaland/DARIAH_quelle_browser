@@ -22,7 +22,8 @@ function btnShow() {
 }; */
 
 RPCManager.allowCrossDomainCalls = true;
-
+// Canvas.resizeControls(5);
+Canvas.resizeFonts(3);
 
 
 isc.DataSource.create({
@@ -75,12 +76,12 @@ isc.DataSource.create({
         { name: 'gesamtwerkId', type: 'integer', detail: true },
         { name: 'typId', type: 'integer', detail: true },
         { name: 'veroeffentlicht', type: 'integer', detail: true },
-        { name: 'titel', autoFitWidth:true },
-        { name: 'untertitel' },
+        { name: 'titel', autoFitWidth: true },
+        { name: 'untertitel', autoFitWidth: true  },
         { name: 'bandtitel' },
         { name: 'baende', type: 'integer' },
         { name: 'band' },
-        { name: 'reihentitel' },
+        { name: 'reihentitel',  autoFitWidth: true  },
         { name: 'reihennummer' },
         { name: 'auflage' },
         { name: 'nachdruck', detail: true },
