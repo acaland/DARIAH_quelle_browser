@@ -77,6 +77,7 @@ isc.DataSource.create({
         { name: 'typId', type: 'integer', detail: true },
         { name: 'veroeffentlicht', type: 'integer', detail: true },
         { name: 'titel', autoFitWidth: true },
+		{ name: 'autor', autoFitWidth: true },
         { name: 'untertitel', autoFitWidth: true  },
         { name: 'bandtitel' },
         { name: 'baende', type: 'integer' },
@@ -100,7 +101,7 @@ isc.DataSource.create({
         { name: 'exzerpiert', type: 'integer', detail: true },
         { name: 'belegmaterial', type: 'integer', detail: true },
         { name: 'bezugszeitraum', detail: true },
-        { name: 'autor' },
+        
         { name: 'bearbeiter' },
         { name: 'herausgeber' },
         { name: 'herausgeberreihe' },
@@ -184,7 +185,74 @@ function populateQuelle() {
 	});
 } */
 
+function getRelatedMultimediaList(id) {
+	RPCManager.sendRequest({
+		actionURL: "http://glibrary.ct.infn.it:3500/v2/repos/dariah/quelle/" + id + "/quelle_multimedia_liste",
+		httpHeaders: {"Authorization": access_token},
+		httpMethod: "GET",
+		callback: function(res, data) {
+			var multimedia_list = JSON.parse(data).quelle_multimedia_liste;
+			console.log(multimedia_list);
+			if (multimedia_list.length > 0) {
+				var multimediaId = multimedia_list[0].multimediaId;
+				getMultimediaSource(multimediaId);
+			}
 
+		}
+	});
+}
+
+function getMultimediaSource(multimediaId) {
+	RPCManager.sendRequest({
+		actionURL: "http://glibrary.ct.infn.it:3500/v2/repos/dariah/multimedia/" + multimediaId,
+		httpHeaders: {"Authorization": access_token},
+		httpMethod: "GET",
+		callback: function(res, data) {
+			var source = JSON.parse(data).source;
+			console.log("Multimedia Source: ", source);
+			getAssets(source);
+		}
+	});
+}
+
+function getAssets(source) {
+	RPCManager.sendRequest({
+		actionURL: "http://glibrary.ct.infn.it:3500/v2/repos/dariah/assets?filter[where][path][like]=" + source,
+		httpHeaders: {"Authorization": access_token},
+		httpMethod: "GET",
+		callback: function(res, data) {
+			var assets = JSON.parse(data);
+			if (assets.length) {
+				for (var i=0; i < assets.length; i++) {
+					console.log(assets[i].id, assets[i].path);
+				}
+				asset_list.setData(assets);
+			} else {
+				console.log("No assets found");
+			}
+		}
+	});
+}
+
+function getAssetTempURL(id) {
+	RPCManager.sendRequest({
+		actionURL: "http://glibrary.ct.infn.it:3500/v2/repos/dariah/assets/" + id + "/_replicas",
+		httpHeaders: {"Authorization": access_token},
+		httpMethod: "GET",
+		callback: function(res, data) {
+			var replica_id = JSON.parse(data)[0].id;
+				RPCManager.sendRequest({
+					downloadResult: true,
+					actionURL: "http://glibrary.ct.infn.it:3500/v2/repos/dariah/assets/" + id + "/_replicas/" + replica_id,
+					httpHeaders: {"Authorization": access_token},
+					httpMethod: "GET",
+					callback: function(res, data) {
+						console.log("starting download");
+					}
+				});
+		}
+	});
+}
 
 isc.ListGrid.create({
 	ID: "quelle",
@@ -208,13 +276,28 @@ isc.ListGrid.create({
     recordClick: function() {
         var record = this.getSelectedRecord();
         detailView.setData(record); 
+		console.log("selected record-> ", record.id);
+		getRelatedMultimediaList(record.id);
     }
 });
 
 isc.ListGrid.create({
    ID: "asset_list",
    autoDraw: false,
-   height: "30%" 
+   height: "30%",
+   fields: [
+		{ name: "category", title: "Category"},
+	   	{ name: "filetype", title: "File Type"},
+		{ name: "filename", title: "File Name"},
+		{ name: "path", title: "Container Path", autoFitWidth: true},
+		{ name: "filesize", title: "File Size", type: "number"},
+		{ name: "uploaddate", title: "Upload Date", type: "date"}
+   ],
+   recordClick: function() {
+	   var record = this.getSelectedRecord();
+	   console.log(record);
+	   getAssetTempURL(record.id)
+   } 
 });
 
 isc.DetailViewer.create({
