@@ -50,11 +50,11 @@ isc.DataSource.create({
 		console.log("criteria", dsRequest.resultSet.getCriteria());
 		
 		var criteria = dsRequest.resultSet.getCriteria();
-		var criteria = {titel: "Material", autor: "Eugen"};
+		//var criteria = {titel: "Material", autor: "Eugen"};
 		var where = "";
 		if (criteria) {
 			for (key in criteria) {
-				where = where + "&filter[where][" + key + "][like]=%" + criteria[key] + "%";
+				where = where + "&filter[where][" + key + "][like]=%25" + encodeURIComponent(criteria[key]) + "%25";
 			}
 			dsRequest.actionURL = dsRequest.actionURL + where;
 		}
