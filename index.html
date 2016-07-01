@@ -9,6 +9,7 @@
 	<script SRC="./isomorphic/skins/Enterprise/load_skin.js"></script>
 </head>
 <body>
+	
 <script>
 
 /*isc.Button.create({
@@ -49,6 +50,7 @@ isc.DataSource.create({
 		console.log("criteria", dsRequest.resultSet.getCriteria());
 		
 		var criteria = dsRequest.resultSet.getCriteria();
+		var criteria = {titel: "Material", autor: "Eugen"};
 		var where = "";
 		if (criteria) {
 			for (key in criteria) {
@@ -236,6 +238,47 @@ function getAssets(source) {
 	});
 }
 
+
+isc.Img.create({
+	ID: "image_wrapper",
+	height: "100%"
+});
+
+isc.Window.create({
+	ID: "preview",
+	title: "Preview Window",
+	canDragResize: true,
+	canDragPosition: true,
+	width:"50%", height:"90%",
+	// top: 100,
+	// left: 100,
+	right: 0,
+	visibility: "hidden",
+	headerControls : ["headerIcon","headerLabel",isc.Button.create({ 
+		layoutAlign:"center", 
+		title:"Download",
+		click: function() {
+			location.href = image_wrapper.src.replace("&inline", "");
+			//console.log(image_wrapper.src);
+		}
+	}), "minimizeButton", "maximizeButton", "closeButton"],
+	//autoSize: true,
+	autoCenter: true,
+	showMaximizeButton: true,
+	showModalMask: true,
+	items: image_wrapper
+	//src: url + "&inline"
+	// items: 
+	// 	isc.Img.create({
+	// 		imageStyle: "center",
+	// 		src: url,
+	// 		autodraw: false
+	// 	})
+	
+});
+
+
+
 function getAssetTempURL(id) {
 	RPCManager.sendRequest({
 		actionURL: "http://glibrary.ct.infn.it:3500/v2/repos/dariah/assets/" + id + "/_replicas",
@@ -251,24 +294,14 @@ function getAssetTempURL(id) {
 					callback: function(res, data) {
 						var url = JSON.parse(data).url;
 						console.log("Download URL", url);
-						isc.Window.create({
-							ID: "preview",
-							canDragResize: true,
-							canDragPosition: true,
-							width:800, height:800,
-							top: 100,
-							left: 100,
-							//autoSize: true,
-							autoCenter: true,
-							src: url + "&inline"
-							// items: 
-							// 	isc.Img.create({
-							// 		imageStyle: "center",
-							// 		src: url,
-							// 		autodraw: false
-							// 	})
-							
-						});
+						
+						image_wrapper.setSrc("");
+						preview.show();
+						image_wrapper.setSrc(url + "&inline");
+						preview.setAutoSize(true);
+						
+						
+						//preview.autoSize = true;
 						//location.href = url;
 						//window.open(url);
 						//downloadAsset(url);
